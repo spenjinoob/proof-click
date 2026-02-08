@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>proof.click MVP</title>
+<style>
+body{margin:0;font-family:monospace;background:#0b0d10;color:#f5f5f5;}
+.container{max-width:720px;margin:auto;padding:24px;}
+header h1{font-size:3rem;margin-bottom:0;}
+header h1 span{color:#f7931a;}
+.tagline{color:#aaa;margin-top:4px;}
+.pitch p{color:#ddd;line-height:1.5;}
+.box{border:1px solid #222;padding:16px;margin-top:24px;border-radius:8px;background:#111;}
+input[type="file"],textarea{width:100%;margin-top:12px;background:#0b0d10;color:#fff;border:1px solid #333;padding:8px;}
+textarea{height:80px;}
+button{margin-top:12px;width:100%;padding:10px;font-size:1rem;background:#f7931a;border:none;cursor:pointer;color:#000;font-weight:bold;}
+button:disabled{background:#444;color:#888;cursor:not-allowed;}
+.or{text-align:center;color:#666;margin:8px 0;}
+.result{margin-top:12px;padding:8px;background:#0b0d10;border:1px dashed #333;font-size:0.9rem;word-break:break-all;}
+footer{margin-top:32px;text-align:center;color:#666;font-size:0.85rem;}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<h1>proof<span>.click</span></h1>
+<p class="tagline">Private, permissionless proof of human creation (Regtest Mode)</p>
+</header>
+
+<section class="box">
+<h2>Connect Wallet</h2>
+<button id="connectBtn">Connect Wallet</button>
+<div id="walletStatus" class="result">Wallet not connected</div>
+</section>
+
+<section class="box">
+<h2>Create a Proof</h2>
+<input type="file" id="fileInput" />
+<p class="or">or</p>
+<textarea id="textInput" placeholder="Paste text here"></textarea>
+<button id="generateBtn" disabled>Generate Proof</button>
+<div id="hashResult" class="result"></div>
+<button id="submitBtn" disabled>Submit Proof to OP Wallet</button>
+</section>
+
+<section class="box">
+<h2>Verify a Proof</h2>
+<input type="file" id="verifyFile" />
+<button id="verifyBtn">Verify</button>
+<div id="verifyResult" class="result"></div>
+</section>
+
+<footer>
+<p>No files stored • Permissionless • Test/Regtest Mode • Works in Brave/Chrome</p>
+</footer>
+
+<!-- Include OPNet SDK -->
+<script src="https://cdn.jsdelivr.net/gh/btc-vision/opnet/dist/opnet.min.js"></script>
+
+<script>
+let currentHash = null;
+let walletConnected = false;
+
+// SHA256 hash function
+async function sha256(buffer){
+  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+  return Array.from(new Uint8Array(hashBuffer)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+// Connect Wallet
+document.getElementById("connectBtn").onclick = async () => {
+  if(!window.opwallet){
+    alert("OP Wallet not detected. Make sure extension is installed, enabled, and allowed for localhost/file URLs.");
+    return;
+  }
+  try {
+    await opwallet.request({ method: "connect" });
+    walletConnected = true;
+    const address = opwallet.getAddress();
+    document.getElementById("walletStatus").innerText = "Connected: " + address;
+    document.getElementById("generateBtn").disabled = false;
+  } catch(e){
+    console.error(e);
+    alert("Failed to connect wallet: "+e.message);
+  }
+};
+
+// Generate Proof
+document.getElementById("generateBtn").onclick = async ()=>{
+  if(!walletConnected){alert("Connect wallet first."); return;}
+  const fileInput=document.getElementById("fileInput");
+  const textInput=document.getElementById("textInput");
+  let data;
+  if(fileInput.files.length>0){data=await fileInput.files[0].arrayBuffer();}
+  else if(textInput.value.trim()!==""){data=new TextEncoder().encode(textInput.value);}
+  else {alert("Select a file or enter text."); return;}
+  currentHash = await sha256(data);
+  document.getElementById("hashResult").innerText = "Hash:\n"+currentHash;
+  document.getElementById("submitBtn").disabled=false;
+};
+
+// Submit Proof to OP Wallet using OPNet SDK
+document.getElementById("submitBtn").onclick = async ()=>{
+  if(!walletConnected){alert("Connect wallet first."); return;}
+  if(!currentHash){alert("Generate proof first."); return;}
+  try{
+    // This is a placeholder for OPNet transaction; SDK provides sendTx function
+    const tx = await opnet.sendTx({
+      to: opwallet.getAddress(),
+      value: 0,
+      data: currentHash,
+      network: 'regtest'
+    });
+    document.getElementById("hashResult").innerText +=
+      "\n\n✔ Proof submitted\nTx ID: "+tx.hash+"\nTimestamp: "+new Date().toISOString();
+    document.getElementById("submitBtn").disabled=true;
+    const proofs = JSON.parse(localStorage.getItem("proofs")||"[]");
+    proofs.push({hash:currentHash, timestamp:new Date().toISOString(), tx:tx.hash});
+    localStorage.setItem("proofs",JSON.stringify(proofs));
+  }catch(e){console.error(e); alert("Failed to submit proof: "+e.message);}
+};
+
+// Verify proof
+document.getElementById("verifyBtn").onclick = async ()=>{
+  const fileInput=document.getElementById("verifyFile");
+  if(fileInput.files.length===0){alert("Select a file to verify."); return;}
+  const data=await fileInput.files[0].arrayBuffer();
+  const hash=await sha256(data);
+  const proofs=JSON.parse(localStorage.getItem("proofs")||"[]");
+  const match=proofs.find(p=>p.hash===hash);
+  document.getElementById("verifyResult").innerText = match
+    ? `✔ Proof found\nTimestamp: ${match.timestamp}\nTx: ${match.tx}`
+    : "✖ No proof found for this file.";
+};
+</script>
+</body>
+</html>
+
