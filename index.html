@@ -1,47 +1,127 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Proof Click MVP</title>
+  <meta charset="UTF-8" />
+  <title>proof.click — OP Wallet MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0d0d0d;
+      color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .box {
+      background: #151515;
+      border-radius: 12px;
+      padding: 24px;
+      width: 340px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 22px;
+      color: #ff9900;
+    }
+
+    p {
+      font-size: 14px;
+      opacity: 0.85;
+    }
+
+    button {
+      margin-top: 16px;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: #ff9900;
+      color: #000;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    pre {
+      margin-top: 16px;
+      text-align: left;
+      font-size: 13px;
+      background: #0b0b0b;
+      padding: 10px;
+      border-radius: 6px;
+      overflow-x: auto;
+      min-height: 48px;
+    }
+  </style>
 </head>
+
 <body>
+  <div class="box">
+    <h1>proof.click</h1>
+    <p>Permissionless proof of human creation.<br>No uploads. No accounts. No tracking.</p>
 
-  <h1>Proof Click</h1>
-  <button id="connectBtn">Connect OP Wallet</button>
+    <button id="connect">Connect OP Wallet</button>
 
-  <pre id="output"></pre>
+    <pre id="status">Waiting…</pre>
+  </div>
 
   <script>
-    const output = document.getElementById("output");
+    const statusEl = document.getElementById("status");
+    const connectBtn = document.getElementById("connect");
 
-    document.getElementById("connectBtn").onclick = async () => {
-      // 1. Check injection
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    connectBtn.onclick = async () => {
+      // 1. Check OP Wallet injection
       if (!window.opnet) {
-        output.textContent = "OP Wallet not found. Make sure OP Wallet extension is installed.";
+        setStatus("OP Wallet not detected.\nInstall OP Wallet and refresh.");
         return;
       }
 
       try {
-        // 2. Request accounts the OPNet way
-        const accounts = await window.opnet.request({
-          method: "opnet_requestAccounts"
-        });
+        setStatus("Initializing OP Wallet…");
+
+        // 2. REQUIRED: initialize OPNet provider
+        await window.opnet.initialize();
+
+        setStatus("Requesting accounts…");
+
+        // 3. Get accounts via OPNet web3 bridge
+        const accounts = await window.opnet.web3.eth.getAccounts();
 
         if (!accounts || accounts.length === 0) {
-          output.textContent = "No accounts returned.";
+          setStatus("Wallet connected, but no accounts returned.");
           return;
         }
 
-        output.textContent =
-          "Connected!\nAddress:\n" + accounts[0];
+        // 4. Success
+        setStatus(
+          "Connected ✅\n\nAddress:\n" +
+          accounts[0]
+        );
 
       } catch (err) {
-        output.textContent = "Error:\n" + err.message;
         console.error(err);
+        setStatus(
+          "Connection failed.\n\n" +
+          (err.message || "Unknown error")
+        );
       }
     };
   </script>
-
 </body>
 </html>
 
