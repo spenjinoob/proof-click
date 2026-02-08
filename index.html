@@ -2,183 +2,146 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>proof.click — Proof of Human Creation</title>
-
+  <title>proof.click</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
-    :root {
-      --bg: #0f1115;
-      --panel: #151821;
-      --text: #e6e6e6;
-      --muted: #9aa0aa;
-      --accent: #f7931a;
-      --accent-dark: #c97712;
-      --border: #222634;
-      --success: #3ddc84;
-      --error: #ff6b6b;
-    }
-
-    * {
-      box-sizing: border-box;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
     body {
       margin: 0;
-      background: radial-gradient(circle at top, #141726, var(--bg));
-      color: var(--text);
       min-height: 100vh;
+      background: #0f1115;
+      color: #e6e6e6;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-family: system-ui, sans-serif;
     }
 
     .card {
       width: 100%;
       max-width: 520px;
-      background: var(--panel);
-      border: 1px solid var(--border);
+      background: #151821;
       border-radius: 14px;
       padding: 32px;
       box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     }
 
     h1 {
-      margin: 0 0 12px;
-      font-size: 1.8rem;
-      letter-spacing: -0.02em;
-    }
-
-    p {
-      margin: 0 0 24px;
-      color: var(--muted);
-      line-height: 1.5;
-      font-size: 0.95rem;
+      margin-top: 0;
     }
 
     button {
       width: 100%;
-      padding: 14px 18px;
+      padding: 14px;
       font-size: 1rem;
-      font-weight: 600;
-      color: #000;
-      background: var(--accent);
+      font-weight: bold;
+      background: #f7931a;
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      transition: transform 0.05s ease, background 0.2s ease;
     }
 
-    button:hover {
-      background: var(--accent-dark);
-    }
-
-    button:active {
-      transform: scale(0.98);
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .status {
       margin-top: 20px;
       padding: 14px;
-      border-radius: 10px;
       background: #0b0e15;
-      border: 1px solid var(--border);
+      border-radius: 10px;
       font-size: 0.85rem;
       white-space: pre-wrap;
-      word-break: break-word;
     }
 
-    .success {
-      color: var(--success);
-    }
-
-    .error {
-      color: var(--error);
-    }
-
-    footer {
-      margin-top: 18px;
-      text-align: center;
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
+    .success { color: #3ddc84; }
+    .error { color: #ff6b6b; }
   </style>
 </head>
 
 <body>
   <div class="card">
     <h1>proof.click</h1>
-    <p>
-      Create a cryptographic proof that a human idea existed at a moment in time —
-      without uploading files, storing data, or asking permission.
-    </p>
+    <p>Waiting for OP Wallet…</p>
 
-    <button id="connectBtn">Connect OP Wallet</button>
+    <button id="connectBtn" disabled>
+      Connect OP Wallet
+    </button>
 
     <div id="status" class="status">
-      Waiting for wallet…
+      Page loaded.
     </div>
-
-    <footer>
-      Powered by Bitcoin via OP_NET · No data stored · Privacy first
-    </footer>
   </div>
 
   <script>
     const statusEl = document.getElementById("status");
     const btn = document.getElementById("connectBtn");
 
-    function setStatus(message, type = "") {
-      statusEl.textContent = message;
-      statusEl.className = "status " + type;
+    function setStatus(msg, cls = "") {
+      statusEl.textContent = msg;
+      statusEl.className = "status " + cls;
     }
 
-    btn.onclick = async () => {
+    // STEP 1: Wait for OP Wallet injection
+    function waitForOpnet() {
+      return new Promise((resolve) => {
+        if (window.opnet?.initialized) {
+          resolve();
+        } else {
+          window.addEventListener("opnet#initialized", () => {
+            resolve();
+          }, { once: true });
+        }
+      });
+    }
+
+    (async () => {
       if (!window.opnet) {
         setStatus(
           "OP Wallet not detected.\n\n" +
-          "• Install OP Wallet extension\n" +
-          "• Make sure it is enabled\n" +
-          "• Unlock the wallet\n" +
-          "• Use normal (not incognito) window",
+          "• Install OP Wallet\n" +
+          "• Enable extension\n" +
+          "• Reload page",
           "error"
         );
         return;
       }
 
+      setStatus("OP Wallet detected.\nWaiting for initialization…");
+
+      await waitForOpnet();
+
+      setStatus("OP Wallet ready ✅");
+      btn.disabled = false;
+    })();
+
+    // STEP 2: Connect button
+    btn.onclick = async () => {
       try {
-        setStatus("Initializing OP Wallet…");
+        setStatus("Reading active account…");
 
-        // Required OP Wallet handshake
-        await window.opnet.initialize();
-
-        // OP Wallet exposes the active account directly
         const account = window.opnet.account;
 
         if (!account || !account.address) {
           setStatus(
-            "Wallet initialized, but no active account found.\n\n" +
-            "Make sure OP Wallet is unlocked and on Regtest.",
+            "No active account.\n\n" +
+            "• Unlock OP Wallet\n" +
+            "• Select an account\n" +
+            "• Ensure Regtest is selected",
             "error"
           );
           return;
         }
 
         setStatus(
-          "Connected ✅\n\n" +
-          "Address:\n" +
-          account.address,
+          "Connected ✅\n\nAddress:\n" + account.address,
           "success"
         );
 
       } catch (err) {
         console.error(err);
-        setStatus(
-          "Connection error:\n" +
-          (err.message || err),
-          "error"
-        );
+        setStatus("Error:\n" + err.message, "error");
       }
     };
   </script>
