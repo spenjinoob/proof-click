@@ -1,113 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Proof Click – OP Wallet MVP</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #0b0b0b;
-      color: #eaeaea;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    .card {
-      background: #151515;
-      border-radius: 12px;
-      padding: 24px;
-      width: 320px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    }
-
-    h1 {
-      font-size: 20px;
-      margin-bottom: 12px;
-    }
-
-    button {
-      background: #00ff9c;
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      padding: 12px 16px;
-      font-size: 16px;
-      cursor: pointer;
-      width: 100%;
-    }
-
-    button:hover {
-      opacity: 0.9;
-    }
-
-    #status {
-      margin-top: 14px;
-      font-size: 14px;
-      opacity: 0.85;
-      min-height: 18px;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <title>Proof Click MVP</title>
 </head>
-
 <body>
-  <div class="card">
-    <h1>Proof Click</h1>
 
-    <button id="connectBtn">Connect OP Wallet</button>
+  <h1>Proof Click</h1>
+  <button id="connectBtn">Connect OP Wallet</button>
 
-    <div id="status">Waiting for user action…</div>
-  </div>
+  <pre id="output"></pre>
 
   <script>
-    const status = document.getElementById("status");
-    const connectBtn = document.getElementById("connectBtn");
+    const output = document.getElementById("output");
 
-    let responseTimeout = null;
-
-    function setStatus(text) {
-      status.textContent = text;
-    }
-
-    // Listen for OP Wallet responses
-    window.addEventListener("message", (event) => {
-      if (!event.data || typeof event.data !== "object") return;
-
-      // OP Wallet style response (generic + tolerant)
-      if (event.data.type === "OPNET_WALLET_RESPONSE") {
-        clearTimeout(responseTimeout);
-        setStatus("OP Wallet connected ✔");
-        console.log("OP Wallet response:", event.data);
+    document.getElementById("connectBtn").onclick = async () => {
+      // 1. Check injection
+      if (!window.opnet) {
+        output.textContent = "OP Wallet not found. Make sure OP Wallet extension is installed.";
+        return;
       }
-    });
 
-    connectBtn.addEventListener("click", () => {
-      setStatus("Requesting OP Wallet connection…");
+      try {
+        // 2. Request accounts the OPNet way
+        const accounts = await window.opnet.request({
+          method: "opnet_requestAccounts"
+        });
 
-      // Send a generic OP-Net connection request
-      window.postMessage(
-        {
-          type: "OPNET_CONNECT",
-          origin: "proof-click"
-        },
-        "*"
-      );
+        if (!accounts || accounts.length === 0) {
+          output.textContent = "No accounts returned.";
+          return;
+        }
 
-      // Soft timeout — not an error, just feedback
-      responseTimeout = setTimeout(() => {
-        setStatus("No response yet. Check OP Wallet extension.");
-      }, 2000);
-    });
+        output.textContent =
+          "Connected!\nAddress:\n" + accounts[0];
 
-    // Soft environment hint (never blocks)
-    setTimeout(() => {
-      setStatus("Ready. Click ‘Connect OP Wallet’.");
-    }, 300);
+      } catch (err) {
+        output.textContent = "Error:\n" + err.message;
+        console.error(err);
+      }
+    };
   </script>
+
 </body>
 </html>
+
