@@ -141,5 +141,46 @@
           "• Install OP Wallet extension\n" +
           "• Make sure it is enabled\n" +
           "• Unlock the wallet\n" +
-          "• Use normal (no
+          "• Use normal (not incognito) window",
+          "error"
+        );
+        return;
+      }
 
+      try {
+        setStatus("Initializing OP Wallet…");
+
+        // Required OP Wallet handshake
+        await window.opnet.initialize();
+
+        // OP Wallet exposes the active account directly
+        const account = window.opnet.account;
+
+        if (!account || !account.address) {
+          setStatus(
+            "Wallet initialized, but no active account found.\n\n" +
+            "Make sure OP Wallet is unlocked and on Regtest.",
+            "error"
+          );
+          return;
+        }
+
+        setStatus(
+          "Connected ✅\n\n" +
+          "Address:\n" +
+          account.address,
+          "success"
+        );
+
+      } catch (err) {
+        console.error(err);
+        setStatus(
+          "Connection error:\n" +
+          (err.message || err),
+          "error"
+        );
+      }
+    };
+  </script>
+</body>
+</html>
