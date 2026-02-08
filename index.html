@@ -70,4 +70,83 @@
     footer {
       margin-top: 18px;
       text-align: center;
-      font-size: 0.75rem
+      font-size: 0.75rem;
+      color: #7f8596;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>proof.click</h1>
+
+    <p>
+      Create a cryptographic proof that a human idea existed at a moment in time —
+      without uploading files, storing data, or asking permission.
+    </p>
+
+    <button id="detectBtn">Detect OP Wallet</button>
+
+    <div id="status" class="status">
+      Waiting for OP Wallet…
+    </div>
+
+    <footer>
+      Powered by Bitcoin via OP_NET · No data stored · Privacy first
+    </footer>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById("status");
+    const btn = document.getElementById("detectBtn");
+
+    function setStatus(message, type = "") {
+      statusEl.textContent = message;
+      statusEl.className = "status " + type;
+    }
+
+    function detectWallet() {
+      if (!window.opnet) {
+        setStatus(
+          "OP Wallet not detected.\n\n" +
+          "• Install OP Wallet extension\n" +
+          "• Enable it in this browser\n" +
+          "• Reload the page",
+          "error"
+        );
+        return;
+      }
+
+      const account = window.opnet.account;
+
+      if (!account || !account.address) {
+        setStatus(
+          "OP Wallet detected ✅\n\n" +
+          "Waiting for active account…\n\n" +
+          "• Unlock OP Wallet\n" +
+          "• Select an account\n" +
+          "• Make sure Regtest is selected",
+          ""
+        );
+        return;
+      }
+
+      setStatus(
+        "Connected ✅\n\n" +
+        "Active address:\n" +
+        account.address,
+        "success"
+      );
+    }
+
+    // Try automatically after load
+    window.addEventListener("load", () => {
+      setTimeout(detectWallet, 500);
+    });
+
+    // Manual refresh
+    btn.onclick = detectWallet;
+  </script>
+</body>
+</html>
+
