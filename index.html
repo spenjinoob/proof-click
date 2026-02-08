@@ -1,73 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>proof.click — OP Wallet MVP</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>proof.click — Proof of Human Creation</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #151821;
+      --text: #e6e6e6;
+      --muted: #9aa0aa;
+      --accent: #f7931a;
+      --accent-dark: #c97712;
+      --border: #222634;
+      --success: #3ddc84;
+      --error: #ff6b6b;
+    }
+
     * {
       box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #0b0b0b;
-      color: #f2f2f2;
+      background: radial-gradient(circle at top, #141726, var(--bg));
+      color: var(--text);
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
     }
 
     .card {
-      background: #151515;
-      padding: 24px;
-      width: 360px;
+      width: 100%;
+      max-width: 520px;
+      background: var(--panel);
+      border: 1px solid var(--border);
       border-radius: 14px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-      text-align: center;
+      padding: 32px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     }
 
     h1 {
       margin: 0 0 12px;
-      color: #ff9900;
-      font-size: 22px;
+      font-size: 1.8rem;
+      letter-spacing: -0.02em;
     }
 
     p {
-      font-size: 14px;
-      opacity: 0.85;
-      margin-bottom: 18px;
+      margin: 0 0 24px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.95rem;
     }
 
     button {
       width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-      background: #ff9900;
-      color: #000;
+      padding: 14px 18px;
+      font-size: 1rem;
       font-weight: 600;
+      color: #000;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.05s ease, background 0.2s ease;
     }
 
     button:hover {
-      opacity: 0.9;
+      background: var(--accent-dark);
     }
 
-    pre {
-      margin-top: 16px;
-      padding: 12px;
-      background: #0e0e0e;
-      border-radius: 8px;
-      font-size: 13px;
-      text-align: left;
-      min-height: 60px;
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .status {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #0b0e15;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
       white-space: pre-wrap;
       word-break: break-word;
+    }
+
+    .success {
+      color: var(--success);
+    }
+
+    .error {
+      color: var(--error);
+    }
+
+    footer {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
     }
   </style>
 </head>
@@ -75,53 +109,37 @@
 <body>
   <div class="card">
     <h1>proof.click</h1>
-    <p>Permissionless proof of human creation.<br>No uploads. No tracking.</p>
+    <p>
+      Create a cryptographic proof that a human idea existed at a moment in time —
+      without uploading files, storing data, or asking permission.
+    </p>
 
     <button id="connectBtn">Connect OP Wallet</button>
 
-    <pre id="status">Waiting…</pre>
+    <div id="status" class="status">
+      Waiting for wallet…
+    </div>
+
+    <footer>
+      Powered by Bitcoin via OP_NET · No data stored · Privacy first
+    </footer>
   </div>
 
   <script>
     const statusEl = document.getElementById("status");
     const btn = document.getElementById("connectBtn");
 
-    function setStatus(msg) {
-      statusEl.textContent = msg;
+    function setStatus(message, type = "") {
+      statusEl.textContent = message;
+      statusEl.className = "status " + type;
     }
 
     btn.onclick = async () => {
       if (!window.opnet) {
-        setStatus("OP Wallet not detected.\nInstall OP Wallet and refresh.");
-        return;
-      }
-
-      try {
-        setStatus("Initializing OP Wallet…");
-
-        // REQUIRED OPNet init
-        await window.opnet.initialize();
-
-        setStatus("Requesting accounts…");
-
-        const accounts = await window.opnet.web3.eth.getAccounts();
-
-        if (!accounts || accounts.length === 0) {
-          setStatus("Wallet connected, but no accounts returned.");
-          return;
-        }
-
         setStatus(
-          "Connected ✅\n\nAddress:\n" +
-          accounts[0]
-        );
-
-      } catch (err) {
-        console.error(err);
-        setStatus("Error:\n" + (err.message || err));
-      }
-    };
-  </script>
-</body>
-</html>
+          "OP Wallet not detected.\n\n" +
+          "• Install OP Wallet extension\n" +
+          "• Make sure it is enabled\n" +
+          "• Unlock the wallet\n" +
+          "• Use normal (no
 
