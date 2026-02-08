@@ -9,141 +9,65 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: #0f1115;
-      color: #e6e6e6;
+      background: #0e1015;
+      color: #eaeaea;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: system-ui, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     .card {
       width: 100%;
       max-width: 520px;
-      background: #151821;
-      border-radius: 14px;
+      background: #141824;
+      border-radius: 16px;
       padding: 32px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.45);
     }
 
     h1 {
-      margin-top: 0;
+      margin: 0 0 12px;
+      font-size: 1.8rem;
+    }
+
+    p {
+      margin: 0 0 24px;
+      color: #aab0c0;
+      line-height: 1.5;
+      font-size: 0.95rem;
     }
 
     button {
       width: 100%;
       padding: 14px;
       font-size: 1rem;
-      font-weight: bold;
+      font-weight: 600;
       background: #f7931a;
+      color: #000;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
     }
 
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    button:hover {
+      opacity: 0.9;
     }
 
     .status {
       margin-top: 20px;
-      padding: 14px;
-      background: #0b0e15;
-      border-radius: 10px;
+      padding: 16px;
+      background: #0a0c12;
+      border-radius: 12px;
       font-size: 0.85rem;
       white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .success { color: #3ddc84; }
     .error { color: #ff6b6b; }
-  </style>
-</head>
 
-<body>
-  <div class="card">
-    <h1>proof.click</h1>
-    <p>Waiting for OP Wallet…</p>
-
-    <button id="connectBtn" disabled>
-      Connect OP Wallet
-    </button>
-
-    <div id="status" class="status">
-      Page loaded.
-    </div>
-  </div>
-
-  <script>
-    const statusEl = document.getElementById("status");
-    const btn = document.getElementById("connectBtn");
-
-    function setStatus(msg, cls = "") {
-      statusEl.textContent = msg;
-      statusEl.className = "status " + cls;
-    }
-
-    // STEP 1: Wait for OP Wallet injection
-    function waitForOpnet() {
-      return new Promise((resolve) => {
-        if (window.opnet?.initialized) {
-          resolve();
-        } else {
-          window.addEventListener("opnet#initialized", () => {
-            resolve();
-          }, { once: true });
-        }
-      });
-    }
-
-    (async () => {
-      if (!window.opnet) {
-        setStatus(
-          "OP Wallet not detected.\n\n" +
-          "• Install OP Wallet\n" +
-          "• Enable extension\n" +
-          "• Reload page",
-          "error"
-        );
-        return;
-      }
-
-      setStatus("OP Wallet detected.\nWaiting for initialization…");
-
-      await waitForOpnet();
-
-      setStatus("OP Wallet ready ✅");
-      btn.disabled = false;
-    })();
-
-    // STEP 2: Connect button
-    btn.onclick = async () => {
-      try {
-        setStatus("Reading active account…");
-
-        const account = window.opnet.account;
-
-        if (!account || !account.address) {
-          setStatus(
-            "No active account.\n\n" +
-            "• Unlock OP Wallet\n" +
-            "• Select an account\n" +
-            "• Ensure Regtest is selected",
-            "error"
-          );
-          return;
-        }
-
-        setStatus(
-          "Connected ✅\n\nAddress:\n" + account.address,
-          "success"
-        );
-
-      } catch (err) {
-        console.error(err);
-        setStatus("Error:\n" + err.message, "error");
-      }
-    };
-  </script>
-</body>
-</html>
+    footer {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 0.75rem
