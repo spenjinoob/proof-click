@@ -1,200 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Timeledger — Cryptographic Time Evidence</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8" />
+<title>Timeledger — PoC with History</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <style>
-    :root {
-      --bg: #0b0f14;
-      --panel: #121821;
-      --text: #e6e9ef;
-      --muted: #9aa4b2;
-      --accent: #ff8c1a;
-      --danger: #ff5c5c;
-      --ok: #2ecc71;
-      --border: #1f2937;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-    }
-
-    header {
-      padding: 32px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 22px;
-      font-weight: 600;
-    }
-
-    header p {
-      margin: 8px 0 0;
-      color: var(--muted);
-      max-width: 720px;
-    }
-
-    main {
-      max-width: 880px;
-      margin: 0 auto;
-      padding: 32px;
-    }
-
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
-    }
-
-    h2 {
-      margin-top: 0;
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 120px;
-      background: #0e141b;
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
-      resize: vertical;
-    }
-
-    button {
-      background: var(--accent);
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-right: 8px;
-    }
-
-    button.secondary {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-
-    button.danger {
-      background: var(--danger);
-      color: #000;
-    }
-
-    .status {
-      margin-top: 12px;
-      font-size: 14px;
-    }
-
-    .ok { color: var(--ok); }
-    .warn { color: var(--accent); }
-    .bad { color: var(--danger); }
-
-    code {
-      background: #0e141b;
-      padding: 4px 6px;
-      border-radius: 6px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .small {
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    footer {
-      padding: 24px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 12px;
-    }
-  </style>
+<style>
+:root {
+  --bg: #0b0f14;
+  --panel: #121821;
+  --text: #e6e9ef;
+  --muted: #9aa4b2;
+  --accent: #ff8c1a;
+  --danger: #ff5c5c;
+  --ok: #2ecc71;
+  --border: #1f2937;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+header { padding: 32px; border-bottom: 1px solid var(--border); }
+header h1 { margin: 0; font-size: 22px; font-weight: 600; }
+header p { margin: 8px 0 0; color: var(--muted); max-width: 720px; }
+main { max-width: 880px; margin: 0 auto; padding: 32px; }
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+h2 { margin-top: 0; font-size: 18px; font-weight: 600; }
+textarea { width: 100%; min-height: 120px; background: #0e141b; color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 12px; resize: vertical; }
+button { background: var(--accent); color: #000; border: none; border-radius: 8px; padding: 10px 14px; font-weight: 600; cursor: pointer; margin-right: 8px; }
+button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+button.danger { background: var(--danger); color: #000; }
+.status { margin-top: 12px; font-size: 14px; }
+.ok { color: var(--ok); }
+.warn { color: var(--accent); }
+.bad { color: var(--danger); }
+code { background: #0e141b; padding: 4px 6px; border-radius: 6px; font-size: 13px; color: var(--muted); }
+.small { font-size: 13px; color: var(--muted); }
+.history { margin-top: 12px; font-size: 13px; border-top: 1px solid var(--border); padding-top: 8px; max-height: 200px; overflow-y: auto; }
+footer { padding: 24px; text-align: center; color: var(--muted); font-size: 12px; }
+</style>
 </head>
 
 <body>
-  <header>
-    <h1>Timeledger</h1>
-    <p>
-      Neutral cryptographic evidence that something existed at a specific moment —
-      without revealing the underlying data.
+<header>
+  <h1>Timeledger — PoC with History</h1>
+  <p>See how fingerprints are created and anchored in this session. Fully simulated, no blockchain required.</p>
+</header>
+
+<main>
+
+  <!-- STEP 1 -->
+  <div class="panel">
+    <h2>1. Create a fingerprint</h2>
+    <textarea id="input" placeholder="Paste text or notes here. Nothing is uploaded."></textarea>
+    <div style="margin-top: 12px;">
+      <button onclick="generateHash()">Generate fingerprint</button>
+    </div>
+    <div id="hashStatus" class="status"></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="panel">
+    <h2>2. Wallet & settlement status</h2>
+    <p class="small">Simulated wallet connection with mock confirmed UTXOs.</p>
+    <button class="secondary" onclick="checkUTXO()">Check wallet status</button>
+    <div id="utxoStatus" class="status"></div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="panel">
+    <h2>3. Anchor proof</h2>
+    <p class="small">Simulated proof submission.</p>
+    <button onclick="anchorProof()">Submit proof for confirmation</button>
+    <div id="anchorStatus" class="status"></div>
+    <div class="history" id="proofHistory"></div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="panel">
+    <h2>What this does / does not mean</h2>
+    <p class="small">
+      This creates an immutable timestamp in concept. It does not verify truth, ownership, or legal rights.
     </p>
-  </header>
+  </div>
 
-  <main>
+</main>
 
-    <!-- STEP 1 -->
-    <div class="panel">
-      <h2>1. Create a fingerprint</h2>
-      <textarea id="input" placeholder="Paste text or notes here. Nothing is uploaded."></textarea>
-      <div style="margin-top: 12px;">
-        <button onclick="generateHash()">Generate fingerprint</button>
-      </div>
-      <div id="hashStatus" class="status"></div>
-    </div>
-
-    <!-- STEP 2 -->
-    <div class="panel">
-      <h2>2. Wallet & settlement status</h2>
-      <p class="small">
-        This demo uses a local cryptographic settlement network (regtest).
-        Transactions require at least one confirmed output.
-      </p>
-      <button class="secondary" onclick="checkUTXO()">Check wallet status</button>
-      <button class="danger" onclick="mineBlock()">Mine one block (regtest)</button>
-      <div id="utxoStatus" class="status"></div>
-    </div>
-
-    <!-- STEP 3 -->
-    <div class="panel">
-      <h2>3. Anchor proof</h2>
-      <p class="small">
-        When the wallet has confirmed funds, approve the proof in your wallet.
-      </p>
-      <button onclick="anchorProof()">Submit proof for confirmation</button>
-      <div id="anchorStatus" class="status"></div>
-    </div>
-
-    <!-- STEP 4 -->
-    <div class="panel">
-      <h2>What this does / does not mean</h2>
-      <p class="small">
-        This creates an immutable timestamp that a cryptographic fingerprint existed
-        at a given moment. It does not verify truth, ownership, authorship,
-        or legal rights.
-      </p>
-    </div>
-
-  </main>
-
-  <footer>
-    Timeledger is neutral technical infrastructure. No data is stored.
-  </footer>
+<footer>
+  Timeledger PoC — fully client-side, no blockchain required.
+</footer>
 
 <script>
-/*
-  This is intentionally simple and explicit.
-  No injected provider assumptions.
-  OP Wallet handles signing.
-*/
-
 let currentHash = null;
+let mockWalletConnected = false;
+let proofHistory = [];
 
 // STEP 1 — Hash
 async function generateHash() {
@@ -203,125 +100,50 @@ async function generateHash() {
     setStatus('hashStatus', 'Please enter some text.', 'bad');
     return;
   }
-
   const encoder = new TextEncoder();
   const data = encoder.encode(input);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   currentHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  setStatus('hashStatus', `Fingerprint generated: <code>${currentHash}</code>`, 'ok');
 
-  setStatus(
-    'hashStatus',
-    `Fingerprint generated: <code>${currentHash}</code>`,
-    'ok'
-  );
+  // Add to history
+  proofHistory.push({type: 'fingerprint', value: currentHash});
+  renderHistory();
 }
 
-// STEP 2 — UTXO check (simple heuristic)
+// STEP 2 — Mock wallet check
 async function checkUTXO() {
-  setStatus('utxoStatus', 'Checking wallet status…', 'warn');
-
-  if (!window.opnet) {
-    setStatus('utxoStatus', 'Wallet not detected. Ensure OP Wallet is installed and unlocked.', 'bad');
-    return;
-  }
-
-  try {
-    const accounts = await window.opnet.getAccounts();
-    if (!accounts || !accounts.length) {
-      setStatus('utxoStatus', 'Wallet connected but no address available.', 'bad');
-      return;
-    }
-
-    setStatus(
-      'utxoStatus',
-      'Wallet connected. If anchoring fails, confirmed outputs are required on regtest.',
-      'ok'
-    );
-  } catch (e) {
-    setStatus('utxoStatus', 'Unable to query wallet status.', 'bad');
-  }
+  mockWalletConnected = true;
+  setStatus('utxoStatus', 'Wallet connected. Mock confirmed UTXO available.', 'ok');
 }
 
-// STEP 2B — Regtest mining helper
-async function mineBlock() {
-  /*
-    This calls a local RPC endpoint.
-    In real deployments this button is removed.
-  */
-
-  const rpcUser = prompt('RPC username (regtest):');
-  const rpcPass = prompt('RPC password:');
-
-  if (!rpcUser || !rpcPass) {
-    setStatus('utxoStatus', 'RPC credentials required.', 'bad');
-    return;
-  }
-
-  const body = {
-    jsonrpc: "1.0",
-    id: "mine",
-    method: "generatetoaddress",
-    params: [1, "bcrt1qdummyaddressreplace"] // address is ignored by most regtest configs
-  };
-
-  try {
-    const res = await fetch('http://127.0.0.1:18443/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa(rpcUser + ':' + rpcPass)
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (!res.ok) throw new Error();
-
-    setStatus(
-      'utxoStatus',
-      'One block mined. Confirmed outputs should now be available.',
-      'ok'
-    );
-  } catch {
-    setStatus(
-      'utxoStatus',
-      'Mining failed. You can also run generatetoaddress manually in the node console.',
-      'bad'
-    );
-  }
-}
-
-// STEP 3 — Anchor proof
+// STEP 3 — Mock anchor proof
 async function anchorProof() {
   if (!currentHash) {
     setStatus('anchorStatus', 'Generate a fingerprint first.', 'bad');
     return;
   }
-
-  if (!window.opnet) {
-    setStatus('anchorStatus', 'Wallet not detected.', 'bad');
+  if (!mockWalletConnected) {
+    setStatus('anchorStatus', 'Check wallet status first.', 'bad');
     return;
   }
+  // Simulate proof submission
+  const mockTxId = 'mock-tx-' + Math.random().toString(36).substring(2, 10);
+  setStatus('anchorStatus', `Proof anchored. Transaction reference: <code>${mockTxId}</code>`, 'ok');
 
-  setStatus('anchorStatus', 'Requesting wallet approval…', 'warn');
+  // Add to history
+  proofHistory.push({type: 'proof', value: mockTxId});
+  renderHistory();
+}
 
-  try {
-    const tx = await window.opnet.send({
-      data: currentHash
-    });
-
-    setStatus(
-      'anchorStatus',
-      `Proof anchored. Transaction reference: <code>${tx}</code>`,
-      'ok'
-    );
-  } catch (e) {
-    setStatus(
-      'anchorStatus',
-      'Submission failed. Confirm outputs exist and try again.',
-      'bad'
-    );
-  }
+// Render history panel
+function renderHistory() {
+  const el = document.getElementById('proofHistory');
+  el.innerHTML = proofHistory.map(item => {
+    if(item.type === 'fingerprint') return `<div>📝 Fingerprint: <code>${item.value}</code></div>`;
+    if(item.type === 'proof') return `<div>✅ Proof anchored: <code>${item.value}</code></div>`;
+  }).join('');
 }
 
 function setStatus(id, msg, cls) {
