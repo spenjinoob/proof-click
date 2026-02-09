@@ -2,151 +2,335 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>proof.click</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timeledger — Cryptographic Time Evidence</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #121821;
+      --text: #e6e9ef;
+      --muted: #9aa4b2;
+      --accent: #ff8c1a;
+      --danger: #ff5c5c;
+      --ok: #2ecc71;
+      --border: #1f2937;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
-      min-height: 100vh;
-      background: #0e1015;
-      color: #eaeaea;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    .card {
-      width: 100%;
-      max-width: 520px;
-      background: #141824;
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.45);
-    }
-
-    h1 {
-      margin: 0 0 12px;
-      font-size: 1.8rem;
-    }
-
-    p {
-      margin: 0 0 24px;
-      color: #aab0c0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
       line-height: 1.5;
-      font-size: 0.95rem;
+    }
+
+    header {
+      padding: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 720px;
+    }
+
+    main {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      background: #0e141b;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      resize: vertical;
     }
 
     button {
-      width: 100%;
-      padding: 14px;
-      font-size: 1rem;
-      font-weight: 600;
-      background: #f7931a;
+      background: var(--accent);
       color: #000;
       border: none;
-      border-radius: 12px;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-weight: 600;
       cursor: pointer;
+      margin-right: 8px;
     }
 
-    button:hover {
-      opacity: 0.9;
+    button.secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    button.danger {
+      background: var(--danger);
+      color: #000;
     }
 
     .status {
-      margin-top: 20px;
-      padding: 16px;
-      background: #0a0c12;
-      border-radius: 12px;
-      font-size: 0.85rem;
-      white-space: pre-wrap;
-      word-break: break-word;
+      margin-top: 12px;
+      font-size: 14px;
     }
 
-    .success { color: #3ddc84; }
-    .error { color: #ff6b6b; }
+    .ok { color: var(--ok); }
+    .warn { color: var(--accent); }
+    .bad { color: var(--danger); }
+
+    code {
+      background: #0e141b;
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .small {
+      font-size: 13px;
+      color: var(--muted);
+    }
 
     footer {
-      margin-top: 18px;
+      padding: 24px;
       text-align: center;
-      font-size: 0.75rem;
-      color: #7f8596;
+      color: var(--muted);
+      font-size: 12px;
     }
   </style>
 </head>
 
 <body>
-  <div class="card">
-    <h1>proof.click</h1>
-
+  <header>
+    <h1>Timeledger</h1>
     <p>
-      Create a cryptographic proof that a human idea existed at a moment in time —
-      without uploading files, storing data, or asking permission.
+      Neutral cryptographic evidence that something existed at a specific moment —
+      without revealing the underlying data.
     </p>
+  </header>
 
-    <button id="detectBtn">Detect OP Wallet</button>
+  <main>
 
-    <div id="status" class="status">
-      Waiting for OP Wallet…
+    <!-- STEP 1 -->
+    <div class="panel">
+      <h2>1. Create a fingerprint</h2>
+      <textarea id="input" placeholder="Paste text or notes here. Nothing is uploaded."></textarea>
+      <div style="margin-top: 12px;">
+        <button onclick="generateHash()">Generate fingerprint</button>
+      </div>
+      <div id="hashStatus" class="status"></div>
     </div>
 
-    <footer>
-      Powered by Bitcoin via OP_NET · No data stored · Privacy first
-    </footer>
-  </div>
+    <!-- STEP 2 -->
+    <div class="panel">
+      <h2>2. Wallet & settlement status</h2>
+      <p class="small">
+        This demo uses a local cryptographic settlement network (regtest).
+        Transactions require at least one confirmed output.
+      </p>
+      <button class="secondary" onclick="checkUTXO()">Check wallet status</button>
+      <button class="danger" onclick="mineBlock()">Mine one block (regtest)</button>
+      <div id="utxoStatus" class="status"></div>
+    </div>
 
-  <script>
-    const statusEl = document.getElementById("status");
-    const btn = document.getElementById("detectBtn");
+    <!-- STEP 3 -->
+    <div class="panel">
+      <h2>3. Anchor proof</h2>
+      <p class="small">
+        When the wallet has confirmed funds, approve the proof in your wallet.
+      </p>
+      <button onclick="anchorProof()">Submit proof for confirmation</button>
+      <div id="anchorStatus" class="status"></div>
+    </div>
 
-    function setStatus(message, type = "") {
-      statusEl.textContent = message;
-      statusEl.className = "status " + type;
+    <!-- STEP 4 -->
+    <div class="panel">
+      <h2>What this does / does not mean</h2>
+      <p class="small">
+        This creates an immutable timestamp that a cryptographic fingerprint existed
+        at a given moment. It does not verify truth, ownership, authorship,
+        or legal rights.
+      </p>
+    </div>
+
+  </main>
+
+  <footer>
+    Timeledger is neutral technical infrastructure. No data is stored.
+  </footer>
+
+<script>
+/*
+  This is intentionally simple and explicit.
+  No injected provider assumptions.
+  OP Wallet handles signing.
+*/
+
+let currentHash = null;
+
+// STEP 1 — Hash
+async function generateHash() {
+  const input = document.getElementById('input').value;
+  if (!input) {
+    setStatus('hashStatus', 'Please enter some text.', 'bad');
+    return;
+  }
+
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  currentHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+  setStatus(
+    'hashStatus',
+    `Fingerprint generated: <code>${currentHash}</code>`,
+    'ok'
+  );
+}
+
+// STEP 2 — UTXO check (simple heuristic)
+async function checkUTXO() {
+  setStatus('utxoStatus', 'Checking wallet status…', 'warn');
+
+  if (!window.opnet) {
+    setStatus('utxoStatus', 'Wallet not detected. Ensure OP Wallet is installed and unlocked.', 'bad');
+    return;
+  }
+
+  try {
+    const accounts = await window.opnet.getAccounts();
+    if (!accounts || !accounts.length) {
+      setStatus('utxoStatus', 'Wallet connected but no address available.', 'bad');
+      return;
     }
 
-    function detectWallet() {
-      if (!window.opnet) {
-        setStatus(
-          "OP Wallet not detected.\n\n" +
-          "• Install OP Wallet extension\n" +
-          "• Enable it in this browser\n" +
-          "• Reload the page",
-          "error"
-        );
-        return;
-      }
+    setStatus(
+      'utxoStatus',
+      'Wallet connected. If anchoring fails, confirmed outputs are required on regtest.',
+      'ok'
+    );
+  } catch (e) {
+    setStatus('utxoStatus', 'Unable to query wallet status.', 'bad');
+  }
+}
 
-      const account = window.opnet.account;
+// STEP 2B — Regtest mining helper
+async function mineBlock() {
+  /*
+    This calls a local RPC endpoint.
+    In real deployments this button is removed.
+  */
 
-      if (!account || !account.address) {
-        setStatus(
-          "OP Wallet detected ✅\n\n" +
-          "Waiting for active account…\n\n" +
-          "• Unlock OP Wallet\n" +
-          "• Select an account\n" +
-          "• Make sure Regtest is selected",
-          ""
-        );
-        return;
-      }
+  const rpcUser = prompt('RPC username (regtest):');
+  const rpcPass = prompt('RPC password:');
 
-      setStatus(
-        "Connected ✅\n\n" +
-        "Active address:\n" +
-        account.address,
-        "success"
-      );
-    }
+  if (!rpcUser || !rpcPass) {
+    setStatus('utxoStatus', 'RPC credentials required.', 'bad');
+    return;
+  }
 
-    // Try automatically after load
-    window.addEventListener("load", () => {
-      setTimeout(detectWallet, 500);
+  const body = {
+    jsonrpc: "1.0",
+    id: "mine",
+    method: "generatetoaddress",
+    params: [1, "bcrt1qdummyaddressreplace"] // address is ignored by most regtest configs
+  };
+
+  try {
+    const res = await fetch('http://127.0.0.1:18443/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + btoa(rpcUser + ':' + rpcPass)
+      },
+      body: JSON.stringify(body)
     });
 
-    // Manual refresh
-    btn.onclick = detectWallet;
-  </script>
+    if (!res.ok) throw new Error();
+
+    setStatus(
+      'utxoStatus',
+      'One block mined. Confirmed outputs should now be available.',
+      'ok'
+    );
+  } catch {
+    setStatus(
+      'utxoStatus',
+      'Mining failed. You can also run generatetoaddress manually in the node console.',
+      'bad'
+    );
+  }
+}
+
+// STEP 3 — Anchor proof
+async function anchorProof() {
+  if (!currentHash) {
+    setStatus('anchorStatus', 'Generate a fingerprint first.', 'bad');
+    return;
+  }
+
+  if (!window.opnet) {
+    setStatus('anchorStatus', 'Wallet not detected.', 'bad');
+    return;
+  }
+
+  setStatus('anchorStatus', 'Requesting wallet approval…', 'warn');
+
+  try {
+    const tx = await window.opnet.send({
+      data: currentHash
+    });
+
+    setStatus(
+      'anchorStatus',
+      `Proof anchored. Transaction reference: <code>${tx}</code>`,
+      'ok'
+    );
+  } catch (e) {
+    setStatus(
+      'anchorStatus',
+      'Submission failed. Confirm outputs exist and try again.',
+      'bad'
+    );
+  }
+}
+
+function setStatus(id, msg, cls) {
+  const el = document.getElementById(id);
+  el.innerHTML = msg;
+  el.className = 'status ' + cls;
+}
+</script>
+
 </body>
 </html>
 
